@@ -16,6 +16,8 @@ n개의 힌트는 공백(스페이스바)으로 구분한다.
 
 나만 쓸것 같아 다른 편의기능은 추가 안함.
 
+![initial](https://github.com/yimpetit/picross-cheater/assets/35022789/9f9c04ab-94a5-4557-8a59-826c3d6369d0)
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
