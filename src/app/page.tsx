@@ -1,113 +1,203 @@
-import Image from 'next/image'
+"use client";
+import Image from "next/image";
+import { KeyboardEvent, useEffect, useState } from "react";
+import _ from "lodash";
+import { lineSolve, oneSolve, testSolve, twoSolve } from "../../common";
 
 export default function Home() {
+  const [mapMax, setMapMax] = useState(5);
+  const [map, setMap] = useState<number[][]>(Array(5).fill(Array(5).fill(0)));
+  const [hint, setHint] = useState("");
+  const [hintRow, setHintRow] = useState<number[][]>([]);
+  const [hintCol, setHintCol] = useState<number[][]>([]);
+
+  const handleSettingMap = (number: number) => {
+    setMap(Array(number).fill(Array(number).fill(0)));
+    setMapMax(number);
+    setHint("");
+    setHintRow([]);
+    setHintCol([]);
+  };
+
+  const handleReset = () => {
+    setHint("");
+    setHintRow([]);
+    setHintCol([]);
+    setMap(Array(mapMax).fill(Array(mapMax).fill(0)));
+  };
+
+  useEffect(() => {
+    const handleAnswer = () => {
+      let di = 0;
+
+      let tempMap = Array(mapMax).fill(Array(mapMax).fill(0));
+      let state = 0;
+
+      while (1) {
+        // console.log(di);
+        if (state === 0) {
+          tempMap = _.map(hintRow, (row: any, idx) =>
+            lineSolve(mapMax, row, tempMap[idx])
+          );
+          state = 1;
+        } else {
+          let originalArray = _.map(hintCol, (col: any, idx) =>
+            lineSolve(
+              mapMax,
+              col,
+              _.map(tempMap, (item) => item[idx])
+            )
+          );
+          let rotatedArray: any = [];
+          for (let i = 0; i < originalArray[0].length; i++) {
+            rotatedArray[i] = [];
+            for (let j = 0; j < originalArray.length; j++) {
+              rotatedArray[i][j] = originalArray[j][i];
+            }
+          }
+          tempMap = rotatedArray;
+          state = 0;
+        }
+
+        let isValuePresent = _.some(tempMap, (row) => _.includes(row, 0));
+
+        if (!isValuePresent) break;
+
+        di++; ////보험
+        if (di > 500) break;
+      }
+      setMap(tempMap);
+    };
+    if (hintRow.length === mapMax && hintCol.length === mapMax) {
+      handleAnswer();
+    }
+  }, [hintRow, hintCol, mapMax]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+    <main className="flex min-h-screen flex-col items-center p-24">
+      <div className="flex gap-10 mb-5">
+        <div>
+          <label>
+            5{" "}
+            <input
+              type="radio"
+              defaultChecked
+              onChange={() => {
+                handleSettingMap(5);
+              }}
+              name="mapset"
             />
-          </a>
+          </label>
+        </div>
+        <div>
+          <label>
+            10{" "}
+            <input
+              type="radio"
+              onChange={() => {
+                handleSettingMap(10);
+              }}
+              name="mapset"
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            15{" "}
+            <input
+              type="radio"
+              onChange={() => {
+                handleSettingMap(15);
+              }}
+              name="mapset"
+            />
+          </label>
         </div>
       </div>
+      <div className="flex">
+        <input
+          type="text"
+          disabled={hintRow.length === mapMax && hintCol.length === mapMax}
+          onChange={(e) => {
+            setHint(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              if (hintRow.length !== mapMax) {
+                setHintRow([
+                  ..._.map(hintRow, (item) => item),
+                  (e.target as HTMLInputElement).value.split(" ").map(Number),
+                ]);
+              } else {
+                setHintCol([
+                  ..._.map(hintCol, (item) => item),
+                  (e.target as HTMLInputElement).value.split(" ").map(Number),
+                ]);
+              }
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+              setHint("");
+            }
+          }}
+          value={hint}
+          className="border p-2 text-xl font-medium"
         />
+        {/* <button
+          className="rounded-sm bg-sky-700 px-4 text-white"
+          onClick={handleAnswer}
+        >
+          정답
+        </button> */}
+        <button
+          className="rounded-sm ml-8 bg-red-700 px-4 text-white"
+          onClick={handleReset}
+        >
+          리셋
+        </button>
       </div>
+      <div className="pt-40">
+        <div className="flex items-end relative">
+          <div className="absolute right-full top-0">
+            {_.map(hintRow, (item, idx) => (
+              <div
+                className={
+                  "flex items-center h-8 pr-2 text-right justify-end whitespace-nowrap"
+                }
+                key={idx}
+              >
+                {item.join(" ")}
+              </div>
+            ))}
+          </div>
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+          <div className="flex border-b flex-col border-slate-300 relative">
+            <div className="flex items-end absolute bottom-full left-0">
+              {_.map(hintCol, (item, idx) => (
+                <div className={"w-8 text-center"} key={idx}>
+                  {_.map(item, (h, hidx) => (
+                    <div key={hidx}>{h + ""}</div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            {_.map(map, (row, idx) => (
+              <div className="flex" key={idx}>
+                {_.map(row, (column, colIdx) => (
+                  <div
+                    className={
+                      "w-8 h-8 border border-b-0 border-slate-300 text-center pt-1" +
+                      (mapMax - 1 === colIdx ? " border-r" : " border-r-0") +
+                      (column === 1 ? " bg-slate-700" : "")
+                    }
+                    key={idx + "" + colIdx}
+                  >
+                    {column === -1 && "❌"}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </main>
-  )
+  );
 }
